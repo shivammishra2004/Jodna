@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Header.css';
 
-const Header = ({ currentTab, setCurrentTab, user }) => {
+const Header = ({ currentTab, setCurrentTab, user,onLogout }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNavMenu, setShowNavMenu] = useState(true); // Start with nav menu open
   const headerRef = useRef(null);
@@ -95,9 +95,15 @@ const Header = ({ currentTab, setCurrentTab, user }) => {
           <button className="profile-menu-item" onClick={() => setShowProfileMenu(false)}>
             Settings
           </button>
-          <button className="profile-menu-item" onClick={() => setShowProfileMenu(false)}>
-            Sign Out
-          </button>
+          <button
+                className="profile-menu-item"
+                onClick={() => {
+                    setShowProfileMenu(false); // existing behavior
+                    onLogout();                 // log out the user
+                }}
+            >
+                Sign Out
+            </button>
         </div>
       )}
 

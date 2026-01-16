@@ -70,6 +70,18 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
         }
     };
 
+    const handleLogout = () => {
+    // Clear token
+        localStorage.removeItem('token');
+
+        // Reset state
+        setUser(null);
+        setOrganization(null);
+        setIsAuthenticated(false);
+        setCurrentTab('Projects'); // Optional: reset to default tab
+    };
+
+
     const initializeApp = async () => {
         setLoading(true);
         try {
@@ -236,6 +248,7 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
                     currentTab={currentTab}
                     setCurrentTab={setCurrentTab}
                     user={user}
+                    onLogout={handleLogout}
                 />
                 {renderPage()}
             </div>
