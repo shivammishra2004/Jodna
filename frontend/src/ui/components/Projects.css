@@ -61,11 +61,13 @@
 }
 
 .status-badge {
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-active {
@@ -100,9 +102,10 @@
 
 /* Project Details Styles */
 .project-details-container {
-  max-width: 800px;
+  max-width: 320px;
+  width: 100%;
   margin: 0 auto;
-  padding: 24px;
+  padding: 12px;
 }
 
 .back-button {
@@ -131,8 +134,10 @@
 }
 
 .project-title-row h1 {
-  font-size: 32px;
+  font-size: 20px;
   margin: 0;
+  font-weight: 600;
+  color: #2c2c2c;
 }
 
 .project-desc {
@@ -142,10 +147,12 @@
 }
 
 .tickets-section h2 {
-  font-size: 20px;
-  margin-bottom: 24px;
+  font-size: 16px;
+  margin-bottom: 16px;
   border-bottom: 1px solid #eee;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
+  font-weight: 600;
+  color: #2c2c2c;
 }
 
 .tickets-list {
@@ -158,11 +165,12 @@
   background: white;
   border: 1px solid #eee;
   border-radius: 6px;
-  padding: 16px;
+  padding: 12px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   transition: box-shadow 0.2s;
+  gap: 12px;
 }
 
 .ticket-card:hover {
@@ -175,14 +183,17 @@
 
 .ticket-title {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 4px;
   color: #2c2c2c;
+  line-height: 1.4;
 }
 
 .ticket-desc {
-  font-size: 14px;
+  font-size: 12px;
   color: #6e6e6e;
+  line-height: 1.4;
+  margin-top: 4px;
 }
 
 .ticket-meta {
@@ -190,20 +201,27 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
-  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .assignee-avatar {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: #1473e6;
+  background: linear-gradient(135deg, #1473e6 0%, #0d66d0 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .unassigned {
@@ -230,7 +248,7 @@
   background: white;
   border-radius: 8px;
   width: 90%;
-  max-width: 500px;
+  max-width: 320px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -238,18 +256,31 @@
   flex-direction: column;
 }
 
+.delete-modal {
+  max-width: 320px;
+}
+
 .modal-header {
-  padding: 20px 24px;
+  padding: 16px;
   border-bottom: 1px solid #eee;
 }
 
 .modal-header h2 {
-  font-size: 20px;
+  font-size: 18px;
   margin: 0;
+  font-weight: 600;
+  color: #2c2c2c;
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 16px;
+}
+
+.modal-body p {
+  font-size: 13px;
+  color: #2c2c2c;
+  margin: 0 0 10px 0;
+  line-height: 1.5;
 }
 
 .form-group {
@@ -273,11 +304,11 @@
 }
 
 .modal-actions {
-  padding: 20px 24px;
+  padding: 16px;
   border-top: 1px solid #eee;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
 }
 
 .modal-button {
@@ -304,32 +335,71 @@
   cursor: not-allowed;
 }
 
+.delete-confirm-button {
+  background: #d32f2f;
+  color: white;
+}
+
+.delete-confirm-button:hover:not(:disabled) {
+  background: #c62828;
+}
+
+.delete-confirm-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.warning-text {
+  font-size: 12px;
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
 .status-select {
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
   border: 1px solid #ddd;
   cursor: pointer;
   outline: none;
   background-color: white;
+  flex-shrink: 0;
 }
 
 .delete-ticket-btn {
-  background: none;
-  border: none;
-  color: #999;
-  font-size: 20px;
-  line-height: 1;
-  padding: 0 4px;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  color: #d32f2f;
+  padding: 3px 5px;
   cursor: pointer;
-  margin-left: 8px;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
-.delete-ticket-btn:hover {
-  color: #d32f2f;
+.delete-ticket-btn:hover:not(:disabled) {
+  background: #ffcdd2;
+  border-color: #ef9a9a;
+  transform: scale(1.05);
+}
+
+.delete-ticket-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.delete-ticket-btn svg {
+  width: 12px;
+  height: 12px;
 }

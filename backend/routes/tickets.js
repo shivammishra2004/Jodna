@@ -88,9 +88,9 @@ router.put('/:id', protect, async (req, res) => {
     }
 });
 
-// @desc    Delete Ticket (Admin/Manager only)
+// @desc    Delete Ticket (Admin only)
 // @route   DELETE /api/tickets/:id
-router.delete('/:id', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
+router.delete('/:id', protect, ensureRole(['ADMIN']), async (req, res) => {
     try {
         const ticket = await Ticket.findById(req.params.id);
 

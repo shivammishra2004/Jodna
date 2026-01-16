@@ -18,10 +18,12 @@ const ProjectDetails = ({ project, user, onBack }) => {
         assignee: ''
     });
     const [creating, setCreating] = useState(false);
+    const [deletingTicketId, setDeletingTicketId] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
     // Permissions
     const canCreateTicket = user.role === 'ADMIN' || user.role === 'MANAGER';
-    const canDeleteTicket = user.role === 'ADMIN' || user.role === 'MANAGER';
+    const canDeleteTicket = user.role === 'ADMIN'; // Admin only
     // canEditTicket logic: Admin/Manager OR the Assignee
     const canEditTicket = (ticket) => {
         if (user.role === 'ADMIN' || user.role === 'MANAGER') return true;
@@ -89,17 +91,19 @@ const ProjectDetails = ({ project, user, onBack }) => {
     };
 
     const handleDeleteTicket = async (ticketId) => {
-        if (!window.confirm("Are you sure you want to delete this ticket?")) return;
-
+        setDeletingTicketId(ticketId);
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`${BACKEND_URL}/api/tickets/${ticketId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setTickets(tickets.filter(t => t._id !== ticketId));
+            setShowDeleteConfirm(null);
         } catch (err) {
             console.error("Failed to delete ticket", err);
-            alert("Failed to delete ticket");
+            alert(err.response?.data?.error || "Failed to delete ticket");
+        } finally {
+            setDeletingTicketId(null);
         }
     };
 
@@ -156,23 +160,41 @@ const ProjectDetails = ({ project, user, onBack }) => {
                                     <div className="ticket-desc">{ticket.description}</div>
                                 </div>
                                 <div className="ticket-meta">
-                                    {canEditTicket(ticket) ? (
-                                        <select
-                                            className={`status-select status-${ticket.status.toLowerCase()}`}
-                                            value={ticket.status}
-                                            onChange={(e) => handleStatusChange(ticket._id, e.target.value)}
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <option value="Open">Open</option>
-                                            <option value="InProgress">In Progress</option>
-                                            <option value="Review">Review</option>
-                                            <option value="Done">Done</option>
-                                        </select>
-                                    ) : (
-                                        <span className={`status-badge status-${ticket.status.toLowerCase()}`}>
-                                            {ticket.status}
-                                        </span>
-                                    )}
+                                    <div className="status-row">
+                                        {canEditTicket(ticket) ? (
+                                            <select
+                                                className={`status-select status-${ticket.status.toLowerCase()}`}
+                                                value={ticket.status}
+                                                onChange={(e) => handleStatusChange(ticket._id, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <option value="Open">Open</option>
+                                                <option value="InProgress">In Progress</option>
+                                                <option value="Review">Review</option>
+                                                <option value="Done">Done</option>
+                                            </select>
+                                        ) : (
+                                            <span className={`status-badge status-${ticket.status.toLowerCase()}`}>
+                                                {ticket.status}
+                                            </span>
+                                        )}
+                                        {canDeleteTicket && (
+                                            <button
+                                                className="delete-ticket-btn"
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    setShowDeleteConfirm(ticket._id);
+                                                }}
+                                                title="Delete Ticket"
+                                                disabled={deletingTicketId === ticket._id}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M12 4V13.3333C12 13.6869 11.8595 14.0261 11.6095 14.2761C11.3594 14.5262 11.0203 14.6667 10.6667 14.6667H5.33333C4.97971 14.6667 4.64057 14.5262 4.39052 14.2761C4.14048 14.0261 4 13.6869 4 13.3333V4M5.33333 2.66667H10.6667L12 4H4L5.33333 2.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                    <path d="M6.66667 7.33333V11.3333M9.33333 7.33333V11.3333" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
 
                                     {ticket.assignee ? (
                                         <div className="assignee-avatar" title={`Assigned to ${ticket.assignee.displayName}`}>
@@ -180,16 +202,6 @@ const ProjectDetails = ({ project, user, onBack }) => {
                                         </div>
                                     ) : (
                                         <span className="unassigned">Unassigned</span>
-                                    )}
-
-                                    {canDeleteTicket && (
-                                        <button
-                                            className="delete-ticket-btn"
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteTicket(ticket._id); }}
-                                            title="Delete Ticket"
-                                        >
-                                            DELETE
-                                        </button>
                                     )}
                                 </div>
                             </div>
@@ -268,6 +280,39 @@ const ProjectDetails = ({ project, user, onBack }) => {
                                 disabled={creating || !newTicket.title.trim()}
                             >
                                 {creating ? 'Creating...' : 'Create Ticket'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="modal-overlay" onClick={() => !deletingTicketId && setShowDeleteConfirm(null)}>
+                    <div className="modal-content delete-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Delete Ticket</h2>
+                        </div>
+                        <div className="modal-body">
+                            <p>Are you sure you want to delete this ticket?</p>
+                            <p className="warning-text">
+                                This action cannot be undone. The ticket will be permanently removed.
+                            </p>
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                className="modal-button cancel-button"
+                                onClick={() => setShowDeleteConfirm(null)}
+                                disabled={deletingTicketId !== null}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="modal-button delete-confirm-button"
+                                onClick={() => handleDeleteTicket(showDeleteConfirm)}
+                                disabled={deletingTicketId !== null}
+                            >
+                                {deletingTicketId === showDeleteConfirm ? 'Deleting...' : 'Delete Ticket'}
                             </button>
                         </div>
                     </div>
