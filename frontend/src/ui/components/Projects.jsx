@@ -58,6 +58,7 @@ const Projects = ({ user, sandboxProxy }) => {
       <ProjectDetails
         project={selectedProject}
         user={user}
+        sandboxProxy={sandboxProxy}
         onBack={() => setSelectedProject(null)}
       />
     );

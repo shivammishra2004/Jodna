@@ -193,4 +193,321 @@
 .modal-footer {
   margin-top: 24px;
   text-align: right;
+  padding: 0 24px 24px;
+}
+
+/* Modern 2-Col Modal Override */
+.modal-content.ticket-detail-modal {
+  width: 900px;
+  max-width: 95vw;
+  padding: 0;
+  overflow: hidden;
+  height: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ticket-detail-modal .modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+
+.ticket-modal-body {
+  display: flex;
+  flex-direction: row;
+  overflow-y: auto;
+  flex: 1; /* Take remaining height */
+  max-height: calc(90vh - 70px); /* fallback */
+}
+
+.ticket-left-col {
+  flex: 4; /* 40% width approx */
+  padding: 24px;
+  border-right: 1px solid #eee;
+  min-width: 300px;
+}
+
+.ticket-right-col {
+  flex: 5; /* 60% width to allow space for content */
+  padding: 24px;
+  background: #fafafa;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: #999;
+}
+.close-btn:hover { color: #333; }
+
+/* User Pill */
+.user-pill {
+  display: inline-block;
+  background: #f5f5f5;
+  color: #333;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  margin-top: 4px;
+  border: 1px solid #eee;
+}
+
+/* Todo List - Modern */
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center; /* Center Vertically */
+  gap: 12px;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  position: relative;
+}
+
+.todo-item:hover {
+  background: #fff;
+  border-color: #e0e0e0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transform: translateY(-1px);
+}
+
+/* Custom Checkbox */
+.todo-item input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.todo-item input[type="checkbox"]:checked {
+  background-color: #1473e6;
+  border-color: #1473e6;
+}
+
+.todo-item input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
+.todo-item input[type="checkbox"]:hover {
+  border-color: #1473e6;
+}
+
+.todo-item span {
+  flex: 1;
+  line-height: 1.5;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.todo-item span.completed {
+  text-decoration: line-through;
+  text-decoration-color: #aaa;
+  color: #aaa;
+}
+
+/* Remove 'X' button */
+.remove-todo {
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0; /* Hide by default */
+  transition: all 0.2s;
+}
+
+.todo-item:hover .remove-todo {
+  opacity: 1; /* Show on hover */
+}
+
+.remove-todo:hover {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+/* New Todo Input */
+.new-todo-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: #fff;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+  border: 1px solid transparent; /* default invisible border */
+}
+
+.new-todo-input::placeholder {
+  color: #aaa;
+}
+
+.new-todo-input:focus {
+  outline: none;
+  background: #fff;
+  border-color: #1473e6;
+  box-shadow: 0 4px 12px rgba(20, 115, 230, 0.15);
+}
+
+/* Attachments */
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+
+.attachment-item a {
+  text-decoration: none;
+  color: #2c2c2c;
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.attachment-item a:hover { color: #1473e6; }
+
+.att-size {
+  font-size: 11px;
+  color: #888;
+  background: #eee;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Buttons */
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.ai-btn {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border: 1px solid #d1c4e9;
+  color: #6a1b9a;
+  box-shadow: 0 2px 4px rgba(106, 27, 154, 0.1);
+}
+.ai-btn:hover {
+  background: linear-gradient(135deg, #e1bee7 0%, #ce93d8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(106, 27, 154, 0.15);
+}
+
+.upload-btn {
+  cursor: pointer;
+  color: #333;
+}
+.upload-btn:hover {
+  background: #f5f5f5;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 8px;
+}
+.section-header h4 {
+  margin: 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #666;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.empty-text {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+  padding: 8px 0;
+}
+
+.modal-grid-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+.modal-grid-compact label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #888;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ticket-modal-body {
+    flex-direction: column;
+  }
+  .ticket-left-col {
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    padding: 16px;
+  }
+  .ticket-right-col {
+    padding: 16px;
+  }
 }

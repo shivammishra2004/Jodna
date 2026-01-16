@@ -43,6 +43,21 @@ const ticketSchema = new mongoose.Schema({
   },
 });
 
+// Add new fields for Todos and Attachments
+ticketSchema.add({
+  todos: [{
+    text: { type: String, required: true },
+    isCompleted: { type: Boolean, default: false }
+  }],
+  attachments: [{
+    filename: String,
+    contentType: String,
+    data: Buffer,
+    size: Number,
+    uploadDate: { type: Date, default: Date.now }
+  }]
+});
+
 ticketSchema.pre('save', function (next) {
   this.updated_at = Date.now();
   next();

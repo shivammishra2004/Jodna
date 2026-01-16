@@ -5,7 +5,7 @@ import './Tickets.css'; // Import shared ticket styles
 
 const BACKEND_URL = 'http://localhost:5000';
 
-const ProjectDetails = ({ project, user, onBack }) => {
+const ProjectDetails = ({ project, user, onBack, sandboxProxy }) => {
     const [tickets, setTickets] = useState([]);
     const [ticketsLoading, setTicketsLoading] = useState(true);
     const [showCreateTicket, setShowCreateTicket] = useState(false);
@@ -27,15 +27,22 @@ const ProjectDetails = ({ project, user, onBack }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
     // Permissions
+    // Permissions
     const canCreateTicket = user.role === 'ADMIN' || user.role === 'MANAGER';
-    const canDeleteTicket = user.role === 'ADMIN'; // Admin only
-    // canEditTicket logic: Admin/Manager OR the Assignee
+    const canDeleteTicket = user.role === 'ADMIN'; 
+    
+    // Helper: Admin/Manager OR the Assignee
     const canEditTicket = (ticket) => {
         if (!ticket) return false;
         if (user.role === 'ADMIN' || user.role === 'MANAGER') return true;
         if (user.role === 'DESIGNER' && ticket.assignee && ticket.assignee._id === user._id) return true;
         return false;
     };
+
+    const canManageContent = (ticket) => canEditTicket(ticket);
+    const canUpdateStatus = (ticket) => canEditTicket(ticket);
+    // Strict modification permission (Add/Delete/Generate) - Admin/Manager Only
+    const canModifyContent = user.role === 'ADMIN' || user.role === 'MANAGER';
 
     useEffect(() => {
         fetchTickets();
@@ -136,6 +143,177 @@ const ProjectDetails = ({ project, user, onBack }) => {
         }
     };
 
+    const updateLocalTicket = (updatedTicket) => {
+        setTickets(prev => prev.map(t => t._id === updatedTicket._id ? updatedTicket : t));
+        setSelectedTicket(updatedTicket);
+    };
+
+    const handleGenerateTodos = async () => {
+        if (!selectedTicket) return;
+        const btn = document.getElementById('ai-sugg-btn');
+        if(btn) btn.innerText = 'Generating...';
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${BACKEND_URL}/api/tickets/generate-todos`, {
+                taskName: selectedTicket.title,
+                description: selectedTicket.description,
+                projectId: project._id
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            // AI returns array of strings, we need to add them one by one or bulk add if backend supported it.
+            // Current backend "generate" just returns JSON. We should probably use the "update" to save them all,
+            // BUT our new backend architecture only supports "Add One".
+            // To keep it simple for now, let's assume the AI route handles the saving? 
+            // Wait, the AI route in backend just returns JSON.
+            // We need a way to save these. Since we removed "PUT ALL", we have to add them one by one or restore a "Bulk Add" route.
+            // Optimization: Let's assume for this specific AI feature we just loop add (not efficient but works) or rely on the user to add them?
+            // BETTER: Let's accept that for AI, we might need a specific "Add Many" route or just iterate.
+            
+            // Actually, looking at the previous plan, we didn't specify bulk add.
+            // Let's implement client-side iteration for now to be safe with the new API constraints.
+            const newTodos = res.data; 
+            
+            // We'll iterate and add them.
+            for (const todoText of newTodos) {
+                 await axios.post(`${BACKEND_URL}/api/tickets/${selectedTicket._id}/todos`, { text: todoText }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                 });
+            }
+            
+            // Refresh ticket
+            const refreshRes = await axios.get(`${BACKEND_URL}/api/tickets?project=${project._id}`, {
+                 headers: { Authorization: `Bearer ${token}` }
+            });
+            // Find our ticket
+            const reloadedTicket = refreshRes.data.find(t => t._id === selectedTicket._id);
+            if (reloadedTicket) updateLocalTicket(reloadedTicket);
+
+        } catch (err) {
+            console.error("AI Error", err);
+            alert(err.response?.data?.error || "Failed to generate todos");
+        } finally {
+             if(btn) btn.innerText = '✨ Generate';
+        }
+    };
+
+    const handleToggleTodo = async (index) => {
+        if (!canManageContent(selectedTicket)) return;
+        
+        // Optimistic Update
+        const newTodos = [...(selectedTicket.todos || [])];
+        newTodos[index].isCompleted = !newTodos[index].isCompleted;
+        updateLocalTicket({ ...selectedTicket, todos: newTodos });
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.patch(`${BACKEND_URL}/api/tickets/${selectedTicket._id}/todos/${index}/toggle`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // No need to reload if successful, optimistic was correct
+        } catch (err) {
+            console.error("Toggle failed", err);
+            // Revert
+            fetchTickets(); 
+        }
+    };
+
+    const handleDeleteTodo = async (index, e) => {
+         if (e) e.stopPropagation();
+         if (!canModifyContent) return; // Strict check
+         
+         console.log("Delete button clicked for index:", index);
+         
+         // Removing window.confirm for now to rule out browser blocking
+         // if(!window.confirm("Delete this item?")) return;
+
+         try {
+             const token = localStorage.getItem('token');
+             console.log(`Sending DELETE to: ${BACKEND_URL}/api/tickets/${selectedTicket._id}/todos/${index}`);
+             
+             const res = await axios.delete(`${BACKEND_URL}/api/tickets/${selectedTicket._id}/todos/${index}`, {
+                 headers: { Authorization: `Bearer ${token}` }
+             });
+             console.log("Delete success, updating state", res.data);
+             updateLocalTicket(res.data);
+         } catch (err) {
+             console.error("Delete failed", err);
+             alert("Failed to delete todo: " + (err.response?.data?.error || err.message));
+         }
+    };
+
+    const handleAddTodo = async (e) => {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+            const text = e.target.value;
+            e.target.value = ''; // clear input immediately
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.post(`${BACKEND_URL}/api/tickets/${selectedTicket._id}/todos`, { text }, {
+                     headers: { Authorization: `Bearer ${token}` }
+                });
+                updateLocalTicket(res.data);
+            } catch (err) {
+                console.error("Add failed", err);
+                alert("Failed to add todo");
+            }
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const res = await axios.post(`${BACKEND_URL}/api/tickets/${selectedTicket._id}/attachments`, formData, {
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            updateLocalTicket(res.data);
+        } catch (err) {
+            console.error("Upload failed", err);
+            alert("Upload failed");
+        }
+    };
+
+    const handleAddToCanvas = async (att) => {
+        if (!sandboxProxy) {
+            console.warn("Sandbox proxy not available");
+            return;
+        }
+
+        try {
+            console.log("Adding attachment to canvas:", att.filename);
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${BACKEND_URL}/api/tickets/${selectedTicket._id}/files/${att._id}`, {
+                responseType: 'blob',
+                 headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const blob = response.data;
+            
+            if (sandboxProxy.createImage) {
+                 await sandboxProxy.createImage(blob);
+            } else {
+                console.log("createImage API not yet implemented in sandbox.");
+            }
+
+        } catch (err) {
+            console.error("Error adding attachment to canvas:", err);
+            alert("Failed to add to canvas");
+        }
+    };
+
+
+
     const handleTicketClick = (ticket) => {
         setSelectedTicket(ticket);
         setIsTicketModalOpen(true);
@@ -199,58 +377,47 @@ const ProjectDetails = ({ project, user, onBack }) => {
                 )}
             </div>
 
-            {/* TICKET DETAIL MODAL */}
+            {/* TICKET DETAIL MODAL (Redesigned) */}
             {isTicketModalOpen && selectedTicket && (
                 <div className="modal-overlay" onClick={closeTicketModal}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-
-                        {/* Header */}
+                    <div className="modal-content ticket-detail-modal" onClick={e => e.stopPropagation()}>
+                        
                         <div className="modal-header">
                             <h2>{selectedTicket.title}</h2>
-                            <span className={`status-badge status-${selectedTicket.status.toLowerCase()}`}>
-                                {selectedTicket.status}
-                            </span>
-                        </div>
-
-                        {/* Description */}
-                        <div className="modal-section">
-                            <h4>Description</h4>
-                            <p>{selectedTicket.description || 'No description provided.'}</p>
-                        </div>
-
-                        {/* Details Grid */}
-                        <div className="modal-grid">
-                            <div>
-                                <label>Assignee</label>
-                                <p>{selectedTicket.assignee ? selectedTicket.assignee.displayName : 'Unassigned'}</p>
-                            </div>
-                            <div>
-                                <label>Created By</label>
-                                <p>{selectedTicket.createdBy ? selectedTicket.createdBy.displayName : '—'}</p>
-                            </div>
-                            <div>
-                                <label>Created At</label>
-                                <p>{selectedTicket.created_at ? new Date(selectedTicket.created_at).toLocaleString() : '—'}</p>
-                            </div>
-                            <div>
-                                <label>Last Updated</label>
-                                <p>{selectedTicket.updated_at ? new Date(selectedTicket.updated_at).toLocaleString() : '—'}</p>
+                            <div className="header-actions">
+                                <span className={`status-badge status-${selectedTicket.status.toLowerCase()}`}>
+                                    {selectedTicket.status}
+                                </span>
+                                <button className="close-btn" onClick={closeTicketModal}>&times;</button>
                             </div>
                         </div>
 
-                        {/* Actions Section */}
-                        {(canEditTicket(selectedTicket) || canDeleteTicket) && (
-                            <div className="modal-section" style={{ borderTop: '1px solid #eee', paddingTop: '16px', marginTop: '24px' }}>
-                                <h4>Actions</h4>
-                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '12px' }}>
+                        <div className="ticket-modal-body">
+                            {/* LEFT COLUMN: Info */}
+                            <div className="ticket-left-col">
+                                <div className="modal-section">
+                                    <h4>Description</h4>
+                                    <p className="ticket-desc-text">{selectedTicket.description || 'No description provided.'}</p>
+                                </div>
 
-                                    {/* Status Change */}
-                                    {canEditTicket(selectedTicket) && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <label style={{ fontSize: '12px', color: '#666' }}>Change Status:</label>
+                                <div className="modal-grid-compact">
+                                     <div>
+                                        <label>Assignee</label>
+                                        <div className="user-pill">{selectedTicket.assignee ? selectedTicket.assignee.displayName : 'Unassigned'}</div>
+                                    </div>
+                                    <div>
+                                        <label>Reporter</label>
+                                        <div className="user-pill">{selectedTicket.created_by ? selectedTicket.created_by.displayName : '—'}</div>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="modal-section actions-section">
+                                    <h4>Actions</h4>
+                                    <div className="actions-row">
+                                        {canUpdateStatus(selectedTicket) && (
                                             <select
-                                                className="form-input"
-                                                style={{ width: 'auto', padding: '4px 8px', margin: 0 }}
+                                                className="status-select"
                                                 value={selectedTicket.status}
                                                 onChange={(e) => handleStatusChange(selectedTicket._id, e.target.value)}
                                             >
@@ -259,28 +426,91 @@ const ProjectDetails = ({ project, user, onBack }) => {
                                                 <option value="Review">Review</option>
                                                 <option value="Done">Done</option>
                                             </select>
-                                        </div>
-                                    )}
-
-                                    {/* Delete Button */}
-                                    {canDeleteTicket && (
-                                        <button
-                                            className="btn-secondary"
-                                            style={{ background: '#ffebee', color: '#c62828', border: '1px solid #ffcdd2', marginLeft: 'auto' }}
-                                            onClick={() => setShowDeleteConfirm(selectedTicket._id)}
-                                        >
-                                            Delete Ticket
-                                        </button>
-                                    )}
+                                        )}
+                                        {canDeleteTicket && (
+                                            <button className="btn-icon delete-btn" onClick={() => setShowDeleteConfirm(selectedTicket._id)}>
+                                                &#128465; Delete
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        )}
 
-                        {/* Footer */}
-                        <div className="modal-footer">
-                            <button className="btn-secondary" onClick={closeTicketModal}>
-                                Close
-                            </button>
+                            {/* RIGHT COLUMN: Content (Todos + Attachments) */}
+                            <div className="ticket-right-col">
+                                {/* TODOS */}
+                                <div className="modal-section">
+                                    <div className="section-header">
+                                        <h4>Checklist</h4>
+                                        {canModifyContent && (
+                                            <button id="ai-sugg-btn" className="btn-small ai-btn" onClick={handleGenerateTodos}>
+                                                ✨ Generate
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="todo-list">
+                                        {(selectedTicket.todos || []).map((todo, idx) => (
+                                            <div key={idx} className="todo-item">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={todo.isCompleted} 
+                                                    onChange={() => handleToggleTodo(idx)}
+                                                    disabled={!canManageContent(selectedTicket)}
+                                                />
+                                                <span className={todo.isCompleted ? 'completed' : ''}>{todo.text}</span>
+                                                {canModifyContent && (
+                                                     <span className="remove-todo" onClick={(e) => handleDeleteTodo(idx, e)}>&times;</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {canModifyContent && (
+                                            <input 
+                                                type="text" 
+                                                className="new-todo-input" 
+                                                placeholder="+ Add item" 
+                                                onKeyDown={handleAddTodo}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* ATTACHMENTS */}
+                                <div className="modal-section">
+                                     <div className="section-header">
+                                        <h4>Attachments</h4>
+                                        {canModifyContent && (
+                                            <label className="btn-small upload-btn">
+                                                &#128206; Add
+                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                            </label>
+                                        )}
+                                    </div>
+                                    <div className="attachments-list">
+                                        {(selectedTicket.attachments || []).map((att) => (
+                                            <div key={att._id} className="attachment-item">
+                                                <div className="att-info" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                                    <span style={{fontSize: '16px'}}>{att.contentType.startsWith('image/') ? '🖼️' : '📄'}</span>
+                                                    <span className="att-name" style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}} title={att.filename}>{att.filename}</span>
+                                                    <span className="att-size">{Math.round(att.size / 1024)} KB</span>
+                                                </div>
+                                                <div className="att-actions" style={{ display: 'flex', gap: '8px' }}>
+                                                    {att.contentType.startsWith('image/') && (
+                                                        <button 
+                                                            className="btn-icon" 
+                                                            onClick={() => handleAddToCanvas(att)}
+                                                            title="Add to Canvas"
+                                                            style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '16px' }}
+                                                        >
+                                                            ➕
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {(selectedTicket.attachments || []).length === 0 && <span className="empty-text">No files.</span>}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
