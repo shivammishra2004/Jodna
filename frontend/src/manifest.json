@@ -16,7 +16,13 @@
             "type": "panel",
             "id": "panel1",
             "main": "index.html",
-            "documentSandbox": "code.js"
+            "documentSandbox": "code.js",
+            "permissions": {
+                "oauth": [
+                    "accounts.google.com",
+                    "www.google.com"
+                ]
+            }
         }
     ]
 }

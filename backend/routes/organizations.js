@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { ensureAuth } = require('../middleware/auth');
+const { protect } = require('../middleware/authMiddleware');
 const Organization = require('../models/Organization');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
 
 // @desc    Create Organization
 // @route   POST /api/organizations
-router.post('/', ensureAuth, async (req, res) => {
+router.post('/', protect, async (req, res) => {
     try {
         // 1. Check if user already has an org
         if (req.user.organization) {
@@ -37,7 +37,7 @@ router.post('/', ensureAuth, async (req, res) => {
 
 // @desc    Join Organization via Code
 // @route   POST /api/organizations/join
-router.post('/join', ensureAuth, async (req, res) => {
+router.post('/join', protect, async (req, res) => {
     try {
         const { inviteCode } = req.body;
         const org = await Organization.findOne({ inviteCode });

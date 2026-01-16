@@ -1,11 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const { ensureAuth, ensureRole } = require('../middleware/auth');
+const { protect } = require('../middleware/authMiddleware');
 const Ticket = require('../models/Ticket');
+
+// Helper for roles (Simple inline or better in middleware)
+const ensureRole = (roles) => (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ error: 'Not authorized for this action' });
+    }
+    next();
+};
 
 // @desc    Get All Tickets (Scoped to Org)
 // @route   GET /api/tickets
-router.get('/', ensureAuth, async (req, res) => {
+router.get('/', protect, async (req, res) => {
     try {
         const tickets = await Ticket.find({ organization: req.user.organization })
             .populate('assignee', 'displayName email')
@@ -20,7 +28,7 @@ router.get('/', ensureAuth, async (req, res) => {
 
 // @desc    Create Ticket (Manager/Admin only)
 // @route   POST /api/tickets
-router.post('/', ensureAuth, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
+router.post('/', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
     try {
         const ticket = await Ticket.create({
             ...req.body,
@@ -36,7 +44,7 @@ router.post('/', ensureAuth, ensureRole(['ADMIN', 'MANAGER']), async (req, res) 
 
 // @desc    Update Ticket Status (Designer can move to InProgress/Review, Manager can do all)
 // @route   PUT /api/tickets/:id
-router.put('/:id', ensureAuth, async (req, res) => {
+router.put('/:id', protect, async (req, res) => {
     try {
         let ticket = await Ticket.findById(req.params.id);
 
