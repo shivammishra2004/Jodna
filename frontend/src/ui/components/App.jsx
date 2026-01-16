@@ -71,7 +71,7 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
     };
 
     const handleLogout = () => {
-    // Clear token
+        // Clear token
         localStorage.removeItem('token');
 
         // Reset state
@@ -214,7 +214,7 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
         return (
             <Theme system="express" scale="medium" color="light">
                 <div className="app-container">
-                    <JoinOrganization onOrgJoined={handleOrgCreated} user={user} />
+                    <JoinOrganization onOrgJoined={handleOrgCreated} user={user} onLogout={handleLogout} />
                 </div>
             </Theme>
         );

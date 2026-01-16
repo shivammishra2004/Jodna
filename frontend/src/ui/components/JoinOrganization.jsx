@@ -4,7 +4,7 @@ import './CreateOrganization.css'; // Reusing the same CSS as it's similar layou
 
 const BACKEND_URL = 'http://localhost:5000';
 
-const JoinOrganization = ({ onOrgJoined, user }) => {
+const JoinOrganization = ({ onOrgJoined, user, onLogout }) => {
     const [inviteCode, setInviteCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -77,8 +77,17 @@ const JoinOrganization = ({ onOrgJoined, user }) => {
                         {loading ? 'Joining...' : 'Join Organization'}
                     </button>
                 </div>
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button
+                        onClick={onLogout}
+                        style={{ background: 'none', border: 'none', color: '#6e6e6e', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                        Sign Out
+                    </button>
+                </div>
             </div>
         </div>
+
     );
 };
 
