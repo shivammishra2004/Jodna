@@ -88,4 +88,27 @@ router.put('/:id', protect, async (req, res) => {
     }
 });
 
+// @desc    Delete Ticket (Admin/Manager only)
+// @route   DELETE /api/tickets/:id
+router.delete('/:id', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+
+        if (!ticket) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        // Verify Org Match
+        if (!ticket.organization.equals(req.user.organization)) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        await Ticket.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Ticket removed' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;

@@ -6,7 +6,7 @@ const BACKEND_URL = 'http://localhost:5000';
 
 const ProjectDetails = ({ project, user, onBack }) => {
     const [tickets, setTickets] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [ticketsLoading, setTicketsLoading] = useState(true);
     const [showCreateTicket, setShowCreateTicket] = useState(false);
     const [members, setMembers] = useState([]);
 
@@ -19,7 +19,15 @@ const ProjectDetails = ({ project, user, onBack }) => {
     });
     const [creating, setCreating] = useState(false);
 
+    // Permissions
     const canCreateTicket = user.role === 'ADMIN' || user.role === 'MANAGER';
+    const canDeleteTicket = user.role === 'ADMIN' || user.role === 'MANAGER';
+    // canEditTicket logic: Admin/Manager OR the Assignee
+    const canEditTicket = (ticket) => {
+        if (user.role === 'ADMIN' || user.role === 'MANAGER') return true;
+        if (user.role === 'DESIGNER' && ticket.assignee && ticket.assignee._id === user._id) return true;
+        return false;
+    };
 
     useEffect(() => {
         fetchTickets();
@@ -38,7 +46,7 @@ const ProjectDetails = ({ project, user, onBack }) => {
         } catch (err) {
             console.error("Failed to fetch tickets", err);
         } finally {
-            setLoading(false);
+            setTicketsLoading(false);
         }
     };
 
@@ -80,6 +88,37 @@ const ProjectDetails = ({ project, user, onBack }) => {
         }
     };
 
+    const handleDeleteTicket = async (ticketId) => {
+        if (!window.confirm("Are you sure you want to delete this ticket?")) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${BACKEND_URL}/api/tickets/${ticketId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setTickets(tickets.filter(t => t._id !== ticketId));
+        } catch (err) {
+            console.error("Failed to delete ticket", err);
+            alert("Failed to delete ticket");
+        }
+    };
+
+    const handleStatusChange = async (ticketId, newStatus) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.put(`${BACKEND_URL}/api/tickets/${ticketId}`,
+                { status: newStatus },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // Update local state
+            setTickets(tickets.map(t => t._id === ticketId ? res.data : t));
+        } catch (err) {
+            console.error("Failed to update status", err);
+            alert(err.response?.data?.error || "Failed to update status");
+        }
+    };
+
     // Helper to get initials
     const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
@@ -102,7 +141,7 @@ const ProjectDetails = ({ project, user, onBack }) => {
 
             <div className="tickets-section">
                 <h2>Tickets ({tickets.length})</h2>
-                {loading ? (
+                {ticketsLoading ? (
                     <p>Loading tickets...</p>
                 ) : tickets.length === 0 ? (
                     <div className="no-tickets">
@@ -117,15 +156,40 @@ const ProjectDetails = ({ project, user, onBack }) => {
                                     <div className="ticket-desc">{ticket.description}</div>
                                 </div>
                                 <div className="ticket-meta">
-                                    <span className={`status-badge status-${ticket.status.toLowerCase()}`}>
-                                        {ticket.status}
-                                    </span>
+                                    {canEditTicket(ticket) ? (
+                                        <select
+                                            className={`status-select status-${ticket.status.toLowerCase()}`}
+                                            value={ticket.status}
+                                            onChange={(e) => handleStatusChange(ticket._id, e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <option value="Open">Open</option>
+                                            <option value="InProgress">In Progress</option>
+                                            <option value="Review">Review</option>
+                                            <option value="Done">Done</option>
+                                        </select>
+                                    ) : (
+                                        <span className={`status-badge status-${ticket.status.toLowerCase()}`}>
+                                            {ticket.status}
+                                        </span>
+                                    )}
+
                                     {ticket.assignee ? (
                                         <div className="assignee-avatar" title={`Assigned to ${ticket.assignee.displayName}`}>
                                             {getInitials(ticket.assignee.displayName)}
                                         </div>
                                     ) : (
                                         <span className="unassigned">Unassigned</span>
+                                    )}
+
+                                    {canDeleteTicket && (
+                                        <button
+                                            className="delete-ticket-btn"
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteTicket(ticket._id); }}
+                                            title="Delete Ticket"
+                                        >
+                                            DELETE
+                                        </button>
                                     )}
                                 </div>
                             </div>
