@@ -76,7 +76,7 @@ router.post('/google', async (req, res) => {
                 displayName: name,
                 email,
                 password: hashedPassword, // Dummy password for OAuth users
-                // googleId: googleId // Optional: add back to schema if needed
+                googleId: googleId
             });
             console.log(`[GoogleAuth] New user created: ${user._id} (${user.email})`);
         }
