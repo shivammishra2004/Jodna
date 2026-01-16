@@ -13,7 +13,7 @@ const Header = ({ currentTab, setCurrentTab, user, onLogout }) => {
   if (user.role === 'ADMIN' || user.role === 'MANAGER') {
     tabs.push('Projects', 'Tickets', 'Organization');
   } else if (user.role === 'DESIGNER') {
-    tabs.push('Tickets', 'Organization');
+    tabs.push('Projects', 'Tickets', 'Organization');
   }
 
   const handleTabChange = (tab) => {
