@@ -11,9 +11,9 @@ const Header = ({ currentTab, setCurrentTab, user, onLogout }) => {
 
   // Role-based tab visibility
   if (user.role === 'ADMIN' || user.role === 'MANAGER') {
-    tabs.push('Projects', 'Tickets', 'Organization');
+    tabs.push('Projects', 'Tickets', 'Organization', 'Assets');
   } else if (user.role === 'DESIGNER') {
-    tabs.push('Projects', 'Tickets', 'Organization');
+    tabs.push('Projects', 'Tickets', 'Organization', 'Assets');
   }
 
   const handleTabChange = (tab) => {

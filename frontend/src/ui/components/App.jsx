@@ -15,6 +15,7 @@ import Home from "./Home";
 import Projects from "./Projects";
 import Tickets from "./Tickets";
 import Organization from "./Organization";
+import Assets from "./Assets";
 import NoOrganizationMessage from "./NoOrganizationMessage";
 import Login from "./Login";
 
@@ -231,6 +232,8 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
                 return <Tickets user={user} />;
             case 'Organization':
                 return <Organization organization={organization} user={user} onLeave={handleOrgLeft} />;
+            case 'Assets':
+                return <Assets user={user} organization={organization} sandboxProxy={sandboxProxy} />;
             default:
                 return <Home user={user} organization={organization} />;
         }

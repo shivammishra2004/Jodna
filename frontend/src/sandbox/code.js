@@ -28,6 +28,11 @@ function start() {
             // Add the rectangle to the document.
             const insertionParent = editor.context.insertionParent;
             insertionParent.children.append(rectangle);
+        },
+        createImage: async (blob) => {
+             const image = editor.createImageContainer(blob);
+             const insertionParent = editor.context.insertionParent;
+             insertionParent.children.append(image);
         }
     };
 
