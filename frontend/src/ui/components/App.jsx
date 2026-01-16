@@ -44,7 +44,6 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
             if (!token) return null;
 
             const response = await axios.get(`${BACKEND_URL}/auth/me`, authConfig());
-            console.log('Fetched user data:', response.data); // Debug log
             return response.data;
         } catch (error) {
             console.error('Error fetching user:', error);
@@ -115,8 +114,6 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
     }, []);
 
     const handleLoginSuccess = async (data) => {
-        console.log('Login success data:', data); // Debug log
-
         // Store token if not already stored by Login component
         if (data.token) {
             localStorage.setItem('token', data.token);
@@ -190,15 +187,10 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
         );
     }
 
-    // Debug logging
-    console.log('Rendering authenticated view', { user, organization, isAuthenticated });
-
     // Check user role and organization status
     const isAdmin = user && user.role === 'ADMIN';
     const hasOrganization = organization !== null;
-    console.log('isAdmin', isAdmin);
-    console.log('hasOrganization', hasOrganization);
-    // Admin without organization -> Create Organization
+    
     // Admin without organization -> Create Organization
     if (isAdmin && !hasOrganization) {
         return (
@@ -238,13 +230,6 @@ const App = ({ addOnUISdk, sandboxProxy }) => {
     return (
         <Theme system="express" scale="medium" color="light">
             <div className="app-container">
-                <div style={{ position: 'fixed', bottom: 0, right: 0, background: 'rgba(0,0,0,0.8)', color: 'white', padding: 10, fontSize: 12, zIndex: 9999 }}>
-                    <p>Auth: {isAuthenticated ? 'Yes' : 'No'}</p>
-                    <p>User: {user ? user.email : 'None'}</p>
-                    <p>Role: {user ? user.role : 'None'}</p>
-                    <p>Org: {organization ? organization._id : 'None'}</p>
-                    <p>Tab: {currentTab}</p>
-                </div>
                 <Header
                     currentTab={currentTab}
                     setCurrentTab={setCurrentTab}
