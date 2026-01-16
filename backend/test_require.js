@@ -1,0 +1,9 @@
+try { require('express'); console.log('express ok'); } catch (e) { console.log('express fail', e.code); }
+try { require('mongoose'); console.log('mongoose ok'); } catch (e) { console.log('mongoose fail', e.code); }
+try { require('dotenv'); console.log('dotenv ok'); } catch (e) { console.log('dotenv fail', e.code); }
+try { require('passport'); console.log('passport ok'); } catch (e) { console.log('passport fail', e.code); }
+try { require('passport-google-oauth20'); console.log('passport-google ok'); } catch (e) { console.log('passport-google fail', e.code); }
+try { require('express-session'); console.log('session ok'); } catch (e) { console.log('session fail', e.code); }
+try { require('connect-mongo'); console.log('connect-mongo ok'); } catch (e) { console.log('connect-mongo fail', e.code); }
+try { require('cors'); console.log('cors ok'); } catch (e) { console.log('cors fail', e.code); }
+try { require('uuid'); console.log('uuid ok'); } catch (e) { console.log('uuid fail', e.code); }

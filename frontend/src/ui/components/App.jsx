@@ -5,6 +5,7 @@ import "@spectrum-web-components/theme/express/theme-light.js";
 import { Theme } from "@swc-react/theme";
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import TestDashboard from "./TestDashboard";
 
 // Import your components
 import Header from "./Header";
