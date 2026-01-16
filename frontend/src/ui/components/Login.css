@@ -28,21 +28,35 @@
     font-size: 14px;
 }
 
+.login-illustration {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    margin-bottom: 24px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .google-btn {
     width: 100%;
     padding: 10px;
-    background-color: #DB4437;
-    color: white;
-    border: none;
+    background-color: white;
+    color: #333;
+    border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     font-weight: 600;
     cursor: pointer;
     margin-bottom: 20px;
     transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
 }
 
 .google-btn:hover {
-    background-color: #c53929;
+    background-color: var(--spectrum-global-color-gray-100);
 }
 
 .divider {
