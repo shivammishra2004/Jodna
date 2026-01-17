@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import "./Login.css";
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 const ADOBE_REDIRECT_URI = "https://express.adobe.com/static/oauth-redirect.html";
 
 // --- PKCE Utilities ---

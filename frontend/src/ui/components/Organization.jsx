@@ -3,7 +3,8 @@ import axios from 'axios';
 import './Organization.css';
 import refreshIcon from '../assets/refresh.svg';
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 
 const Organization = ({ organization, user, onLeave }) => {
   const [members, setMembers] = useState([]);

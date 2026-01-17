@@ -19,7 +19,8 @@ import Assets from "./Assets";
 import NoOrganizationMessage from "./NoOrganizationMessage";
 import Login from "./Login";
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 
 const App = ({ addOnUISdk, sandboxProxy }) => {
     const [user, setUser] = useState(null);

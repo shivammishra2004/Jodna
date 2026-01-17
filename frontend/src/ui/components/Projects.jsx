@@ -3,7 +3,8 @@ import axios from 'axios';
 import './Projects.css';
 import ProjectDetails from './ProjectDetails';
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 
 const Projects = ({ user, sandboxProxy }) => {
   const [projects, setProjects] = useState([]);

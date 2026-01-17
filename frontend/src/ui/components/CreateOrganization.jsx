@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './CreateOrganization.css';
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 
 const CreateOrganization = ({ onOrgCreated, user }) => {
   const [orgName, setOrgName] = useState('');

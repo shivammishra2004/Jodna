@@ -49,12 +49,12 @@
 }
 
 /* Header */
-.header {
+/* .header {
   margin-bottom: 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
+} */
 
 .logo-wrapper {
   display: inline-flex;

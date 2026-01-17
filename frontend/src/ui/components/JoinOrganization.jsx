@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Users, PlusCircle, LogOut, ArrowRight, Hash, Type, AlertCircle, Loader2 } from 'lucide-react';
 import './JoinOrganization.css';
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 
 const JoinOrganization = ({ onOrgJoined, user, onLogout }) => {
   const [mode, setMode] = useState('join');

@@ -4,7 +4,8 @@ import axios from 'axios';
 import './Projects.css';
 import './Tickets.css'; // Import shared ticket styles
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 
 // Component for ticket image attachment thumbnail
 const TicketImageAttachmentThumbnail = ({ ticketId, attachment, onView, onAddToCanvas, onDelete, canDelete, BACKEND_URL }) => {

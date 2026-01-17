@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './Assets.css';
 
-const BACKEND_URL = 'http://localhost:5000';
+import config from "../../config";
+const { BACKEND_URL } = config;
 
 const Assets = ({ user, sandboxProxy, organization }) => {
     const [assets, setAssets] = useState([]);
