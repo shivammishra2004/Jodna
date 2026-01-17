@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Plus, LogOut, Users, Sparkles } from 'lucide-react';
+import './JoinOrganization.css';
 
 const BACKEND_URL = 'http://localhost:5000';
 
@@ -68,131 +68,107 @@ const JoinOrganization = ({ onOrgJoined, user, onLogout }) => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     mode === 'join' ? handleJoin() : handleCreate();
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleSubmit();
+  };
+
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 overflow-y-auto">
-      <div className="w-full max-w-[320px] mx-auto p-4">
-        <div className="text-center mb-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl mb-3 shadow-lg">
-            <Sparkles className="text-white" size={24} />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome to Jodna</h1>
-          <p className="text-xs text-gray-600 px-2">
+    <div className="join-org-container">
+      <div className="join-org-content">
+        <div className="header">
+          <div className="logo-icon">✨</div>
+          <h1 className="title">Welcome to Jodna</h1>
+          <p className="subtitle">
             {mode === 'join' 
               ? 'Join your team with an invite code' 
               : 'Create a new workspace for your team'}
           </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="grid grid-cols-2 bg-gray-50 p-0.5 m-3 rounded-lg gap-0.5">
+        <div className="card">
+          <div className="mode-toggle">
             <button
               onClick={() => { setMode('join'); setError(''); }}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md font-medium transition-all duration-200 text-sm ${
-                mode === 'join'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`toggle-btn ${mode === 'join' ? 'active' : ''}`}
             >
-              <Users size={16} />
-              Join
+              👥 Join
             </button>
             <button
               onClick={() => { setMode('create'); setError(''); }}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-md font-medium transition-all duration-200 text-sm ${
-                mode === 'create'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`toggle-btn ${mode === 'create' ? 'active' : ''}`}
             >
-              <Plus size={16} />
-              Create
+              ➕ Create
             </button>
           </div>
 
-          <div className="p-4 space-y-4">
+          <div className="form-content">
             {mode === 'join' ? (
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Invite Code
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={inviteCode}
-                    onChange={(e) => { setInviteCode(e.target.value); setError(''); }}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
-                    placeholder="Enter invite code"
-                    disabled={loading}
-                    autoFocus
-                    className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50"
-                  />
-                </div>
+              <div className="form-group">
+                <label className="form-label">Invite Code</label>
+                <input
+                  type="text"
+                  value={inviteCode}
+                  onChange={(e) => { setInviteCode(e.target.value); setError(''); }}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter invite code"
+                  disabled={loading}
+                  autoFocus
+                  className="form-input"
+                />
               </div>
             ) : (
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Organization Name
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={orgName}
-                    onChange={(e) => { setOrgName(e.target.value); setError(''); }}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
-                    placeholder="e.g., Acme Corp"
-                    disabled={loading}
-                    autoFocus
-                    className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 disabled:opacity-50"
-                  />
-                </div>
+              <div className="form-group">
+                <label className="form-label">Organization Name</label>
+                <input
+                  type="text"
+                  value={orgName}
+                  onChange={(e) => { setOrgName(e.target.value); setError(''); }}
+                  onKeyPress={handleKeyPress}
+                  placeholder="e.g., Acme Corp"
+                  disabled={loading}
+                  autoFocus
+                  className="form-input"
+                />
               </div>
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                <div className="flex-shrink-0 w-4 h-4 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                  <span className="text-red-600 text-xs font-bold">!</span>
-                </div>
-                <p className="text-xs text-red-700 flex-1">{error}</p>
+              <div className="error-message">
+                <span className="error-icon">!</span>
+                <p>{error}</p>
               </div>
             )}
 
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm"
+              className="submit-btn"
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="spinner"></span>
                   {mode === 'join' ? 'Joining...' : 'Creating...'}
                 </>
               ) : (
                 <>
-                  {mode === 'join' ? <Users size={16} /> : <Building2 size={16} />}
-                  {mode === 'join' ? 'Join Organization' : 'Create Organization'}
+                  {mode === 'join' ? '👥 Join Organization' : '🏢 Create Organization'}
                 </>
               )}
             </button>
           </div>
         </div>
 
-        <button
-          onClick={onLogout}
-          className="w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 text-xs text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-lg transition-all duration-200"
-        >
-          <LogOut size={14} />
-          <span className="font-medium">Sign Out</span>
+        <button onClick={onLogout} className="logout-btn">
+          🚪 Sign Out
         </button>
 
         {user && (
-          <p className="text-center mt-3 text-xs text-gray-500">
-            Signed in as <span className="font-medium text-gray-700">{user.email || user.username}</span>
+          <p className="user-info">
+            Signed in as <span className="user-email">{user.email || user.username}</span>
           </p>
         )}
       </div>
