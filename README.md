@@ -169,7 +169,7 @@ JODNA/
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/YOUR_USERNAME/JODNA.git
+git clone https://github.com/Sparshkalia/Jodna.git
 cd JODNA
 ```
 
