@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, PlusCircle, Building2, LogOut, ArrowRight, Hash, Type, AlertCircle, Loader2 } from 'lucide-react';
+import { Users, PlusCircle, LogOut, ArrowRight, Hash, Type, AlertCircle, Loader2 } from 'lucide-react';
 import './JoinOrganization.css';
 
 const BACKEND_URL = 'http://localhost:5000';
@@ -83,7 +83,7 @@ const JoinOrganization = ({ onOrgJoined, user, onLogout }) => {
         <div className="card">
           <div className="header">
             <div className="logo-wrapper">
-              <Building2 className="logo-icon" strokeWidth={1.5} />
+              <img src={require("../assets/logo.png")} alt="Jodna" className="logo-icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <h1 className="title">Welcome to Jodna</h1>
             {/* <p className="subtitle">

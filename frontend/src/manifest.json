@@ -11,6 +11,14 @@
             }
         ]
     },
+    "icons": [
+        {
+            "type": "image/png",
+            "width": 192,
+            "height": 192,
+            "path": "ui/assets/logo.png"
+        }
+    ],
     "entryPoints": [
         {
             "type": "panel",

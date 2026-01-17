@@ -3,7 +3,7 @@ import './Header.css';
 
 const Header = ({ currentTab, setCurrentTab, user, onLogout }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showNavMenu, setShowNavMenu] = useState(true); // Start with nav menu open
+  const [showNavMenu, setShowNavMenu] = useState(false); // Start with nav menu closed
   const headerRef = useRef(null);
   const profileMenuRef = useRef(null);
 
