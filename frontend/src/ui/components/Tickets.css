@@ -1,15 +1,26 @@
+/* Ensure all elements use border-box and don't overflow */
+.tickets-container,
+.tickets-container * {
+  box-sizing: border-box;
+}
+
 .tickets-container {
-  max-width: 1200px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 12px;
+  overflow-x: hidden;
 }
 
 .tickets-header {
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 
 .tickets-header button {
   width: 100%;
+  padding: 8px;
+  font-size: 13px;
+  box-sizing: border-box;
 }
 
 .tickets-header h1 {
@@ -20,19 +31,21 @@
 
 .tickets-filters {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 6px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .filter-btn {
-  padding: 8px 16px;
+  padding: 6px 10px;
   background: white;
   border: 1px solid #d1d1d1;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filter-btn:hover {
@@ -49,7 +62,8 @@
 .tickets-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  width: 100%;
 }
 
 .no-tickets {
@@ -62,13 +76,17 @@
 .ticket-card {
   background: white;
   border-radius: 8px;
-  padding: 20px;
+  padding: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 8px;
   transition: all 0.2s;
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .ticket-card:hover {
@@ -77,35 +95,50 @@
 
 .ticket-main {
   flex: 1;
+  width: 100%;
+  min-width: 0;
 }
 
 .ticket-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #2c2c2c;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
 }
 
 .ticket-description {
-  font-size: 14px;
+  font-size: 12px;
   color: #6e6e6e;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
 }
 
 .ticket-footer {
   display: flex;
-  gap: 16px;
-  font-size: 12px;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
   color: #6e6e6e;
-  flex-wrap: wrap;
+}
+
+.ticket-footer span {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .status-badge {
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   white-space: nowrap;
+  align-self: flex-start;
+  flex-shrink: 0;
 }
 
 .status-open {
@@ -145,15 +178,19 @@
 /* Modal Box */
 .modal-content {
   background: #fff;
-  width: 450px;
-  max-width: 90%;
+  width: 100%;
+  max-width: 320px;
   border-radius: 8px;
-  padding: 24px;
+  padding: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
 }
 
 .modal-content h2 {
   margin-top: 0;
+  font-size: 16px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .modal-details p {
@@ -172,29 +209,52 @@
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .modal-section {
   margin-top: 16px;
 }
 
+.modal-section h4 {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.modal-section p {
+  font-size: 12px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  margin: 0;
+}
+
 .modal-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
   margin-top: 16px;
 }
 
 .modal-grid label {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.modal-grid p {
+  font-size: 12px;
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .modal-footer {
-  margin-top: 24px;
+  margin-top: 16px;
   text-align: right;
-  padding: 0 24px 24px;
+  padding: 0;
 }
 
 /* Modern Single Column Modal for 320px */
@@ -202,7 +262,8 @@
   width: 100%;
   max-width: 320px;
   padding: 0;
-  overflow: hidden;
+  padding-bottom: 16px;
+  overflow-y: auto;
   height: auto;
   max-height: 90vh;
   display: flex;
@@ -224,38 +285,26 @@
 .ticket-modal-body {
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: visible;
   flex: 1;
-  max-height: calc(90vh - 70px);
+  min-height: 0;
 }
 
 .ticket-left-col {
   width: 100%;
-  padding: 0;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .ticket-right-col {
   width: 100%;
-  padding: 0;
+  padding: 16px;
   background: transparent;
+  box-sizing: border-box;
   /* Take remaining height */
   max-height: calc(90vh - 70px);
   /* fallback */
-}
-
-.ticket-left-col {
-  flex: 4;
-  /* 40% width approx */
-  padding: 24px;
-  border-right: 1px solid #eee;
-  min-width: 300px;
-}
-
-.ticket-right-col {
-  flex: 5;
-  /* 60% width to allow space for content */
-  padding: 24px;
-  background: #fafafa;
+  padding-bottom: 32px;
 }
 
 /* Header Actions */
@@ -523,9 +572,15 @@
 
 .modal-grid-compact {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   margin: 16px 0;
+}
+
+@media (min-width: 480px) {
+  .modal-grid-compact {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .modal-grid-compact label {
@@ -550,4 +605,12 @@
   .ticket-right-col {
     padding: 16px;
   }
+}
+
+/* Ensure all ticket-related elements respect 320px width */
+.ticket-card *,
+.ticket-main *,
+.ticket-footer * {
+  max-width: 100%;
+  box-sizing: border-box;
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Users, PlusCircle, Building2, LogOut, ArrowRight, Hash, Type, AlertCircle, Loader2 } from 'lucide-react';
 import './JoinOrganization.css';
 
 const BACKEND_URL = 'http://localhost:5000';
@@ -79,29 +80,31 @@ const JoinOrganization = ({ onOrgJoined, user, onLogout }) => {
   return (
     <div className="join-org-container">
       <div className="join-org-content">
-        <div className="header">
-          <div className="logo-icon">✨</div>
-          <h1 className="title">Welcome to Jodna</h1>
-          <p className="subtitle">
-            {mode === 'join' 
-              ? 'Join your team with an invite code' 
-              : 'Create a new workspace for your team'}
-          </p>
-        </div>
-
         <div className="card">
+          <div className="header">
+            <div className="logo-wrapper">
+              <Building2 className="logo-icon" strokeWidth={1.5} />
+            </div>
+            <h1 className="title">Welcome to Jodna</h1>
+            {/* <p className="subtitle">
+              {mode === 'join' 
+                ? 'Enter your invite code to collaborate with your team' 
+                : 'Create a new workspace to start your journey'}
+            </p> */}
+          </div>
+
           <div className="mode-toggle">
             <button
               onClick={() => { setMode('join'); setError(''); }}
               className={`toggle-btn ${mode === 'join' ? 'active' : ''}`}
             >
-              👥 Join
+              <Users size={18} /> Join Team
             </button>
             <button
               onClick={() => { setMode('create'); setError(''); }}
               className={`toggle-btn ${mode === 'create' ? 'active' : ''}`}
             >
-              ➕ Create
+              <PlusCircle size={18} /> Create New
             </button>
           </div>
 
@@ -109,36 +112,42 @@ const JoinOrganization = ({ onOrgJoined, user, onLogout }) => {
             {mode === 'join' ? (
               <div className="form-group">
                 <label className="form-label">Invite Code</label>
-                <input
-                  type="text"
-                  value={inviteCode}
-                  onChange={(e) => { setInviteCode(e.target.value); setError(''); }}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Enter invite code"
-                  disabled={loading}
-                  autoFocus
-                  className="form-input"
-                />
+                <div className="input-wrapper">
+                  {/* <Hash className="input-icon" size={18} /> */}
+                  <input
+                    type="text"
+                    value={inviteCode}
+                    onChange={(e) => { setInviteCode(e.target.value); setError(''); }}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter 6-digit code"
+                    disabled={loading}
+                    autoFocus
+                    className="form-input"
+                  />
+                </div>
               </div>
             ) : (
               <div className="form-group">
                 <label className="form-label">Organization Name</label>
-                <input
-                  type="text"
-                  value={orgName}
-                  onChange={(e) => { setOrgName(e.target.value); setError(''); }}
-                  onKeyPress={handleKeyPress}
-                  placeholder="e.g., Acme Corp"
-                  disabled={loading}
-                  autoFocus
-                  className="form-input"
-                />
+                <div className="input-wrapper">
+                  {/* <Type className="input-icon" size={18} /> */}
+                  <input
+                    type="text"
+                    value={orgName}
+                    onChange={(e) => { setOrgName(e.target.value); setError(''); }}
+                    onKeyPress={handleKeyPress}
+                    placeholder="e.g. Acme Design Studio"
+                    disabled={loading}
+                    autoFocus
+                    className="form-input"
+                  />
+                </div>
               </div>
             )}
 
             {error && (
               <div className="error-message">
-                <span className="error-icon">!</span>
+                <AlertCircle className="error-icon" />
                 <p>{error}</p>
               </div>
             )}
@@ -150,27 +159,30 @@ const JoinOrganization = ({ onOrgJoined, user, onLogout }) => {
             >
               {loading ? (
                 <>
-                  <span className="spinner"></span>
-                  {mode === 'join' ? 'Joining...' : 'Creating...'}
+                  <Loader2 className="spinner" />
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
-                  {mode === 'join' ? '👥 Join Organization' : '🏢 Create Organization'}
+                  <span>{mode === 'join' ? 'Join Organization' : 'Create Workspace'}</span>
+                  <ArrowRight size={18} />
                 </>
               )}
             </button>
           </div>
         </div>
 
-        <button onClick={onLogout} className="logout-btn">
-          🚪 Sign Out
-        </button>
+        <div className="footer-section">
+          <button onClick={onLogout} className="logout-btn">
+            <LogOut size={14} /> Sign Out
+          </button>
 
-        {user && (
-          <p className="user-info">
-            Signed in as <span className="user-email">{user.email || user.username}</span>
-          </p>
-        )}
+          {user && (
+            <p className="user-info">
+              Signed in as <span className="user-email">{user.email || user.username}</span>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
