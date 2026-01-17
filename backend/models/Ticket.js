@@ -55,7 +55,12 @@ ticketSchema.add({
     data: Buffer,
     size: Number,
     uploadDate: { type: Date, default: Date.now }
-  }]
+  }],
+  // Express project link - designer can add this
+  expressProjectLink: {
+    type: String,
+    trim: true
+  }
 });
 
 ticketSchema.pre('save', function (next) {

@@ -64,6 +64,223 @@ router.post('/', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => 
     }
 });
 
+// NOTE: More specific routes must come before generic :id routes
+
+// @desc    Upload Attachment
+// @route   POST /api/tickets/:id/attachments
+router.post('/:id/attachments', protect, ensureRole(['ADMIN', 'MANAGER']), upload.single('file'), async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        // Check Permissions
+        if (!ticket.organization.equals(req.user.organization)) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        ticket.attachments.push({
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+            data: req.file.buffer,
+            size: req.file.size
+        });
+
+        await ticket.save();
+        
+        // Return ticket without heavy binary data for performance, or specific attachment info
+        // We'll just return the updated list metadata
+        const updatedTicket = await Ticket.findById(req.params.id).select('-attachments.data');
+        res.json(updatedTicket);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Delete Attachment (Admin/Manager only)
+// @route   DELETE /api/tickets/:id/attachments/:fileId
+router.delete('/:id/attachments/:fileId', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        // Verify Org Match
+        if (!ticket.organization.equals(req.user.organization)) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        const attachment = ticket.attachments.id(req.params.fileId);
+        if (!attachment) {
+            return res.status(404).json({ error: 'Attachment not found' });
+        }
+
+        ticket.attachments.pull(req.params.fileId);
+        await ticket.save();
+
+        const updatedTicket = await Ticket.findById(req.params.id)
+            .populate('assignee', 'displayName email')
+            .populate('created_by', 'displayName')
+            .populate('project', 'name')
+            .select('-attachments.data');
+
+        res.json(updatedTicket);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Get Attachment Content
+// @route   GET /api/tickets/:id/files/:fileId
+router.get('/:id/files/:fileId', protect, async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+        
+        // Simple auth check: if user is in same org
+        if (!ticket.organization.equals(req.user.organization)) {
+             return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        const attachment = ticket.attachments.id(req.params.fileId);
+        if (!attachment) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        res.set('Content-Type', attachment.contentType);
+        res.send(attachment.data);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Add a Todo (Admin/Manager only)
+// @route   POST /api/tickets/:id/todos
+router.post('/:id/todos', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
+    try {
+        const { text } = req.body;
+        const ticket = await Ticket.findById(req.params.id);
+        
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+        if (!ticket.organization.equals(req.user.organization)) return res.status(403).json({ error: 'Not authorized' });
+
+        ticket.todos.push({ text, isCompleted: false });
+        await ticket.save();
+
+        res.json(ticket);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Review/Toggle Todo (Admin/Manager OR Assignee)
+// @route   PATCH /api/tickets/:id/todos/:index/toggle
+router.patch('/:id/todos/:index/toggle', protect, async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+        if (!ticket.organization.equals(req.user.organization)) return res.status(403).json({ error: 'Not authorized' });
+
+        const isManager = ['ADMIN', 'MANAGER'].includes(req.user.role);
+        const isAssignee = ticket.assignee && ticket.assignee.equals(req.user._id);
+
+        if (!isManager && !isAssignee) {
+            return res.status(403).json({ error: 'Not authorized to toggle this todo' });
+        }
+
+        const index = parseInt(req.params.index);
+        if (index < 0 || index >= ticket.todos.length) {
+            return res.status(400).json({ error: 'Invalid todo index' });
+        }
+
+        ticket.todos[index].isCompleted = !ticket.todos[index].isCompleted;
+        await ticket.save();
+
+        res.json(ticket);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Delete Todo (Admin/Manager only)
+// @route   DELETE /api/tickets/:id/todos/:index
+router.delete('/:id/todos/:index', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        
+        console.log(`[DEBUG] Delete Todo Request - Ticket: ${req.params.id}, Index: ${req.params.index}, User: ${req.user._id}`);
+        
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+        if (!ticket.organization.equals(req.user.organization)) return res.status(403).json({ error: 'Not authorized' });
+
+        const index = parseInt(req.params.index);
+        if (index < 0 || index >= ticket.todos.length) {
+            return res.status(400).json({ error: 'Invalid todo index' });
+        }
+
+        // Prevent deletion of completed todos
+        if (ticket.todos[index].isCompleted) {
+            return res.status(400).json({ error: 'Cannot delete completed checklist items' });
+        }
+
+        ticket.todos.splice(index, 1);
+        await ticket.save();
+
+        res.json(ticket);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @desc    Update Express Project Link (Designer can update their assigned tickets)
+// @route   PUT /api/tickets/:id/express-link
+router.put('/:id/express-link', protect, async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        // Verify Org Match
+        if (!ticket.organization.equals(req.user.organization)) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        // Only assigned designers can update the Express project link
+        if (req.user.role !== 'DESIGNER') {
+            return res.status(403).json({ error: 'Only assigned designers can update the Express project link' });
+        }
+        
+        if (!ticket.assignee || !ticket.assignee.equals(req.user._id)) {
+            return res.status(403).json({ error: 'You are not assigned to this ticket' });
+        }
+
+        const { expressProjectLink } = req.body;
+        ticket.expressProjectLink = expressProjectLink || null;
+        await ticket.save();
+
+        const updatedTicket = await Ticket.findById(req.params.id)
+            .populate('assignee', 'displayName email')
+            .populate('created_by', 'displayName')
+            .populate('project', 'name');
+
+        res.json(updatedTicket);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @desc    Update Ticket Status (Designer can move to InProgress/Review, Manager can do all)
 // @route   PUT /api/tickets/:id
 router.put('/:id', protect, async (req, res) => {
@@ -81,7 +298,7 @@ router.put('/:id', protect, async (req, res) => {
 
         // Logic Re: Roles
         // Designers can only update THEIR tickets
-        if (req.user.role === 'DESIGNER' && !ticket.assignee.equals(req.user._id)) {
+        if (req.user.role === 'DESIGNER' && ticket.assignee && !ticket.assignee.equals(req.user._id)) {
             return res.status(403).json({ error: 'Not authorized to edit this ticket' });
         }
 
@@ -90,7 +307,14 @@ router.put('/:id', protect, async (req, res) => {
             runValidators: true,
         });
 
-        res.json(ticket);
+        // Populate fields before returning
+        const updatedTicket = await Ticket.findById(ticket._id)
+            .populate('assignee', 'displayName email')
+            .populate('created_by', 'displayName')
+            .populate('project', 'name')
+            .select('-attachments.data');
+
+        res.json(updatedTicket);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
@@ -179,144 +403,6 @@ router.post('/generate-todos', protect, ensureRole(['ADMIN', 'MANAGER']), async 
         console.error("AI Generation Critical Error:", err);
         // Send actual error message to frontend for debugging
         res.status(500).json({ error: err.message || 'Failed to generate todos' });
-    }
-});
-
-// @desc    Upload Attachment
-// @route   POST /api/tickets/:id/attachments
-router.post('/:id/attachments', protect, ensureRole(['ADMIN', 'MANAGER']), upload.single('file'), async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-
-        // Check Permissions
-        if (!ticket.organization.equals(req.user.organization)) {
-            return res.status(403).json({ error: 'Not authorized' });
-        }
-
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        ticket.attachments.push({
-            filename: req.file.originalname,
-            contentType: req.file.mimetype,
-            data: req.file.buffer,
-            size: req.file.size
-        });
-
-        await ticket.save();
-        
-        // Return ticket without heavy binary data for performance, or specific attachment info
-        // We'll just return the updated list metadata
-        const updatedTicket = await Ticket.findById(req.params.id).select('-attachments.data');
-        res.json(updatedTicket);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-});
-
-// @desc    Add a Todo (Admin/Manager only)
-// @route   POST /api/tickets/:id/todos
-router.post('/:id/todos', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
-    try {
-        const { text } = req.body;
-        const ticket = await Ticket.findById(req.params.id);
-        
-        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-        if (!ticket.organization.equals(req.user.organization)) return res.status(403).json({ error: 'Not authorized' });
-
-        ticket.todos.push({ text, isCompleted: false });
-        await ticket.save();
-
-        res.json(ticket);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-});
-
-// @desc    Review/Toggle Todo (Admin/Manager OR Assignee)
-// @route   PATCH /api/tickets/:id/todos/:index/toggle
-router.patch('/:id/todos/:index/toggle', protect, async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-        if (!ticket.organization.equals(req.user.organization)) return res.status(403).json({ error: 'Not authorized' });
-
-        const isManager = ['ADMIN', 'MANAGER'].includes(req.user.role);
-        const isAssignee = ticket.assignee && ticket.assignee.equals(req.user._id);
-
-        if (!isManager && !isAssignee) {
-            return res.status(403).json({ error: 'Not authorized to toggle this todo' });
-        }
-
-        const index = parseInt(req.params.index);
-        if (index < 0 || index >= ticket.todos.length) {
-            return res.status(400).json({ error: 'Invalid todo index' });
-        }
-
-        ticket.todos[index].isCompleted = !ticket.todos[index].isCompleted;
-        await ticket.save();
-
-        res.json(ticket);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-});
-
-// @desc    Delete Todo (Admin/Manager only)
-// @route   DELETE /api/tickets/:id/todos/:index
-router.delete('/:id/todos/:index', protect, ensureRole(['ADMIN', 'MANAGER']), async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        
-        console.log(`[DEBUG] Delete Todo Request - Ticket: ${req.params.id}, Index: ${req.params.index}, User: ${req.user._id}`);
-        
-        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-        if (!ticket.organization.equals(req.user.organization)) return res.status(403).json({ error: 'Not authorized' });
-
-        const index = parseInt(req.params.index);
-        if (index < 0 || index >= ticket.todos.length) {
-            return res.status(400).json({ error: 'Invalid todo index' });
-        }
-
-        ticket.todos.splice(index, 1);
-        await ticket.save();
-
-        res.json(ticket);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-});
-
-// @desc    Get Attachment Content
-// @route   GET /api/tickets/:id/files/:fileId
-router.get('/:id/files/:fileId', protect, async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-        
-        // Simple auth check: if user is in same org
-        if (!ticket.organization.equals(req.user.organization)) {
-             return res.status(403).json({ error: 'Not authorized' });
-        }
-
-        const attachment = ticket.attachments.id(req.params.fileId);
-        if (!attachment) {
-            return res.status(404).json({ error: 'File not found' });
-        }
-
-        res.set('Content-Type', attachment.contentType);
-        res.send(attachment.data);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
     }
 });
 
